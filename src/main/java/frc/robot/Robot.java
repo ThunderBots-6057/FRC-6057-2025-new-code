@@ -9,29 +9,36 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import edu.wpi.first.wpilibj.motorcontrol.Spark;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.LongSupplier;
 
-
-
+// See https://docs.revrobotics.com/revlib/install#c++-and-java-installation
+// For how to install revrobotics library
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkBase.PersistMode;
+import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.config.SparkMaxConfig;
 
 public class Robot extends TimedRobot {
   private DifferentialDrive m_robotDrive;
   private Joystick m_driver;
   private Joystick m_operator;
 
-
-  private final Spark m_leftFrontMotor = new Spark(4);
-  private final Spark m_rightFrontMotor = new Spark(5);
-  private final Spark m_leftRearMotor = new Spark(51);
-  private final Spark m_rightRearMotor = new Spark(3);
-  private final Spark m_algeIntakeArm = new Spark(6);
-  private final Spark m_algeIntake = new Spark(7);
-  private final Spark m_coralIntake = new Spark(8);
-  private final Spark m_coralIntakeAngle = new Spark(9);
-  private final Spark m_climb = new Spark(10);
+  private final SparkMaxConfig c_leftFrontMotor = new SparkMaxConfig();
+  private final SparkMax m_leftFrontMotor = new SparkMax(4, MotorType.kBrushed);
+  private final SparkMaxConfig c_rightFrontMotor = new SparkMaxConfig();
+  private final SparkMax m_rightFrontMotor = new SparkMax(5, MotorType.kBrushed);
+  private final SparkMaxConfig c_leftRearMotor = new SparkMaxConfig();
+  private final SparkMax m_leftRearMotor = new SparkMax(51, MotorType.kBrushed);
+  private final SparkMaxConfig c_rightRearMotor = new SparkMaxConfig();
+  private final SparkMax m_rightRearMotor = new SparkMax(3, MotorType.kBrushed);
+  private final SparkMax m_algeIntakeArm = new SparkMax(6, MotorType.kBrushed);
+  private final SparkMax m_algeIntake = new SparkMax(7, MotorType.kBrushed);
+  private final SparkMax m_coralIntake = new SparkMax(8, MotorType.kBrushed);
+  private final SparkMax m_coralIntakeAngle = new SparkMax(9, MotorType.kBrushed);
+  private final SparkMax m_climb = new SparkMax(10, MotorType.kBrushed);
 
 
 
@@ -41,12 +48,18 @@ public class Robot extends TimedRobot {
     // we need one side of the divetrain so that positive voltages
     // result in both sides moving forward. Depending on how your robot's
     // gearbox is constructed, you might have to invert the left side instead
-    m_rightFrontMotor.setInverted(true);
-    m_rightRearMotor.setInverted(true);
+    c_rightFrontMotor.inverted(true);
+    c_rightRearMotor.inverted(true);
     
     //make the rears follow the fronts
-    m_leftRearMotor.setInverted(m_leftFrontMotor.getInverted());
-    m_rightRearMotor.setInverted(m_rightFrontMotor.getInverted());
+    c_leftRearMotor.follow(m_leftFrontMotor);
+    c_rightRearMotor.follow(m_rightFrontMotor);
+
+    // Apply the configs
+    m_leftFrontMotor.configure(c_leftFrontMotor, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    m_leftRearMotor.configure(c_leftRearMotor, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    m_rightFrontMotor.configure(c_rightFrontMotor, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    m_rightRearMotor.configure(c_rightRearMotor, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     //Set up dive and control systems
     m_robotDrive = new DifferentialDrive(m_leftFrontMotor::set, m_rightFrontMotor::set);
