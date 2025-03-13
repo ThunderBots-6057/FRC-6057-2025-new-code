@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj2.command.button.POVButton;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.LongSupplier;
@@ -34,22 +35,37 @@ public class Robot extends TimedRobot {
   private final SparkMax m_leftRearMotor = new SparkMax(51, MotorType.kBrushed);
   private final SparkMaxConfig c_rightRearMotor = new SparkMaxConfig();
   private final SparkMax m_rightRearMotor = new SparkMax(3, MotorType.kBrushed);
-  private final SparkMax m_algeIntakeArm = new SparkMax(6, MotorType.kBrushed);
-  private final SparkMax m_algeIntake = new SparkMax(7, MotorType.kBrushed);
-  private final SparkMax m_coralIntake = new SparkMax(8, MotorType.kBrushed);
-  private final SparkMax m_coralIntakeAngle = new SparkMax(9, MotorType.kBrushed);
-  private final SparkMax m_climb = new SparkMax(10, MotorType.kBrushed);
+  private final SparkMax m_algeIntakeArm = new SparkMax(7, MotorType.kBrushed);
+  private final SparkMax m_algeIntake = new SparkMax(8, MotorType.kBrushed);
+  private final SparkMax m_coralIntake = new SparkMax(13, MotorType.kBrushed);
+  private final SparkMax m_coralIntakeAngle = new SparkMax(2, MotorType.kBrushed);
+  private final SparkMax m_climb = new SparkMax(15, MotorType.kBrushed);
+
+  private boolean b_driveSpeed = true;
+
+
+
+  // pnuematics to be added
+  // Operator r stick up n down
+
+
+
 
 
 
 
   @Override
   public void robotInit() {
+
+
     // we need one side of the divetrain so that positive voltages
     // result in both sides moving forward. Depending on how your robot's
     // gearbox is constructed, you might have to invert the left side instead
     c_rightFrontMotor.inverted(true);
     c_rightRearMotor.inverted(true);
+    
+    c_leftFrontMotor.inverted(true);
+    c_leftRearMotor.inverted(true);
     
     //make the rears follow the fronts
     c_leftRearMotor.follow(m_leftFrontMotor);
@@ -61,15 +77,76 @@ public class Robot extends TimedRobot {
     m_rightFrontMotor.configure(c_rightFrontMotor, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     m_rightRearMotor.configure(c_rightRearMotor, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-    //Set up dive and control systems
+    //Set up drive and control systems
+    //Add drive speed toggle
     m_robotDrive = new DifferentialDrive(m_leftFrontMotor::set, m_rightFrontMotor::set);
     m_driver = new Joystick(0);
     m_operator = new Joystick(1);
+
+    
   }
       //Set the neutral mode to brake
       @Override
     public void teleopPeriodic() {
-         m_robotDrive.tankDrive(-m_driver.getRawAxis(1)*0.6,m_driver.getRawAxis(5)*0.6);
-     
 
-  }}
+      if (m_driver.getRawButton(0)){
+        b_driveSpeed = !b_driveSpeed;
+     }
+
+     if(b_driveSpeed){
+       m_robotDrive.tankDrive(-m_driver.getRawAxis(1),m_driver.getRawAxis(5));
+     }else {
+       m_robotDrive.tankDrive(-m_driver.getRawAxis(1)*0.6,m_driver.getRawAxis(5)*0.6);
+     }
+
+      
+
+      //Algae Intake Arm
+      if (m_operator.getPOV(1) == 0){
+       m_algeIntakeArm.set(1);
+      } else if (m_operator.getPOV(1) == 180) {
+       m_algeIntakeArm.set(-1);
+      } else {
+       m_algeIntakeArm.set(0);
+      }
+
+      //Algae Intake
+      if(m_operator.getRawAxis(3) >= 0.5 ){
+        m_algeIntake.set(1);
+      } else if (m_operator.getRawAxis(2) >= 0.5){
+       m_algeIntake.set(-1);
+      } else {
+       m_algeIntake.set(0);
+      }
+
+      //Coral Intake
+      if(m_operator.getRawButton(6)){
+        m_coralIntake.set(1);
+      } else if (m_operator.getRawButton(5)){
+        m_coralIntake.set(-1);
+      } else {
+       m_coralIntake.set(0);
+      }
+      
+      //Coral Arm
+      if (m_operator.getRawAxis(1) > 0.1){
+       m_algeIntakeArm.set(-1);
+      } else if(m_operator.getRawAxis(1) < -0.1){
+       m_algeIntakeArm.set(1);
+      } else {
+       m_algeIntakeArm.set(0);
+      }
+
+      //Coral Arm Elevator
+
+      //Climber Elevator
+      if (m_driver.getRawAxis(3) >= 0.5){
+       m_climb.set(1);
+      } else if (m_driver.getRawAxis(2) >= 0.5){
+       m_climb.set(-1);
+      } else {
+       m_climb.set(0);
+      }
+
+      
+    }}
