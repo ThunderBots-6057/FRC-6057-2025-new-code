@@ -25,6 +25,21 @@ import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+// Imports from last year for camera and shuffleboard/dashboard
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.cscore.CvSink;
+import edu.wpi.first.cscore.CvSource;
+import edu.wpi.first.cscore.UsbCamera;
+import edu.wpi.first.cscore.VideoMode;
+import edu.wpi.first.cscore.VideoSource.ConnectionStrategy;
+import edu.wpi.first.util.PixelFormat;
+import edu.wpi.first.util.sendable.SendableRegistry;
+
+
 public class Robot extends TimedRobot {
   private DifferentialDrive m_robotDrive;
   private XboxController m_driver;
@@ -47,6 +62,24 @@ public class Robot extends TimedRobot {
   private boolean b_driveSpeed = true;
 
 
+  // From last year for shuffleboard/dashboard and camera
+  final Timer autonTimer = new Timer();
+
+  UsbCamera camera1;
+  UsbCamera camera2;
+ 
+  private static final String kCustomAutoDisabled = "Auton Disabled";
+  private static final String kCustomAutoOne = "Auton One";
+  private static final String kCustomAutoTwo = "Auton Two";
+  private static final String kCustomAutoThree = "Auton Three";
+  private static final String kCustomAutoFour = "Auton Four";
+  private static final String kCustomAutoFive = "Auton Five";
+  private static final String kDefaultAuto = kCustomAutoOne;
+  private String m_autoSelected;
+  private final SendableChooser<String> m_chooser = new SendableChooser<>();
+
+
+
 
   // pnuematics to be added
   // Operator r stick up n down
@@ -56,6 +89,8 @@ public class Robot extends TimedRobot {
 // Timers for debounce
 private final Timer t_driveSpeed = new Timer();
 
+private static final boolean camerasConnected = false;
+private static final int autonDelay = 5;
 
 
 
@@ -88,12 +123,134 @@ private final Timer t_driveSpeed = new Timer();
     m_driver = new XboxController(0);
     m_operator = new XboxController(1);
 
+    m_autoSelected = m_chooser.getSelected();
+    System.out.println("Auto selected: " + m_autoSelected);
+    SmartDashboard.putData("Auton", m_chooser);
+
+
     // Timers for debounce reset
     t_driveSpeed.reset();
     t_driveSpeed.start();
 
+    // Shuffleboard/dashboard settings
+    SendableRegistry.addChild(m_robotDrive, m_leftFrontMotor);
+    SendableRegistry.addChild(m_robotDrive, m_rightFrontMotor);
+
+    m_chooser.setDefaultOption(kDefaultAuto, kDefaultAuto);
+    m_chooser.addOption(kCustomAutoDisabled, kCustomAutoDisabled);
+    m_chooser.addOption(kCustomAutoOne, kCustomAutoOne);
+    m_chooser.addOption(kCustomAutoTwo, kCustomAutoTwo);
+    m_chooser.addOption(kCustomAutoThree, kCustomAutoThree);
+    m_chooser.addOption(kCustomAutoFour, kCustomAutoFour);
+    m_chooser.addOption(kCustomAutoFive, kCustomAutoFive);
+
+
+    m_autoSelected = m_chooser.getSelected();
+    System.out.println("Auto selected: " + m_autoSelected);
+    SmartDashboard.putData("Auton", m_chooser);
+
+// Camera detect
+// try to connect to camera 1
+    try {
+      //  Block of code to try
+      if(camerasConnected) {
+        camera1 = CameraServer.startAutomaticCapture(0);
+        camera1.setVideoMode(PixelFormat.kMJPEG,640,480,30);
+      }
+
+    }
+
+    catch(Exception e) {
+      //  Block of code to handle errors
+      System.out.println("Camera-1: Not connected " + e.getMessage());
+    }
+
+    // try to connect to camera 2
+    try {
+      if (camerasConnected){
+      //  Block of code to try
+        camera2 = CameraServer.startAutomaticCapture(1);
+        camera2.setVideoMode(PixelFormat.kMJPEG,640,480,30);
+      }
+    }
+
+    
+
+    catch(Exception e) {
+      //  Block of code to handle errors
+      System.out.println("Camera-2: Not connected " + e.getMessage());
+    }
+
+
+  }
+
+
+  // Begin auton code from last year -------------------------------------------------------------
+  @Override
+  public void autonomousInit(){
+    // Reset autonTimer everytime autonomous mode is entered
+    autonTimer.reset();
+    autonTimer.start();
+
+    // read selected auton and show what was chosen
+    m_autoSelected = m_chooser.getSelected();
+    System.out.println("Auto selected: " + m_autoSelected);
+
     
   }
+
+  @Override
+  public void autonomousPeriodic(){
+    
+    // Perform selected Auton
+    switch(m_autoSelected) {
+      case kCustomAutoDisabled:
+        // Do nothing
+        break;
+      case kCustomAutoOne:
+//        if(!IntakeUp.get()) {
+//        m_intake_lift.set(-0.25); //up
+//        }
+
+
+        if (1.5 >= autonTimer.get()) {
+          m_robotDrive.tankDrive(1, 1);
+        } else {
+          m_robotDrive.tankDrive(0, 0);
+        }
+        break;
+      case kCustomAutoTwo:
+        // code block for Auton Two
+        ///////////////////////////////////  Start
+      
+        
+
+        if (((1.5 + autonDelay) >= autonTimer.get()) && (autonTimer.get() >= autonDelay)) {
+          m_robotDrive.tankDrive(1, 1);
+        } else {
+          m_robotDrive.tankDrive(0, 0);
+        }
+
+        ///////////////////////////////////  End
+        break;
+      case kCustomAutoThree:
+        // code block for Auton Three
+        break;
+      case kCustomAutoFour:
+        // code block for Auton Four
+        break;
+      case kCustomAutoFive:
+        // code block for Auton Five
+        break;
+      default:
+        System.out.println("Warning: No Auton selected");
+    }
+
+  }
+
+  // End auton code from last year ---------------------------------------------------------------
+
+
       //Set the neutral mode to brake
       @Override
     public void teleopPeriodic() {
@@ -153,18 +310,18 @@ private final Timer t_driveSpeed = new Timer();
       }
 
       //Coral Arm Elevator (pnuematics)
-        if (m_operator.getRawAxis(5) >= 0.5) {
+        if (m_operator.getRawAxis(5) <= -0.5) {
           doubleSolenoid_one.set(DoubleSolenoid.Value.kForward);
           doubleSolenoid_two.set(DoubleSolenoid.Value.kForward);
-//          SmartDashboard.putString("Solenoid State", "Forward");
-        } else if (m_operator.getRawAxis(5) <= -0.5) {
+          SmartDashboard.putString("Solenoid State", "Forward");
+        } else if (m_operator.getRawAxis(5) >= 0.5) {
           doubleSolenoid_one.set(DoubleSolenoid.Value.kReverse);
           doubleSolenoid_two.set(DoubleSolenoid.Value.kReverse);
-//          SmartDashboard.putString("Solenoid State", "Reverse");
+          SmartDashboard.putString("Solenoid State", "Reverse");
         } else {
           doubleSolenoid_one.set(DoubleSolenoid.Value.kOff);
           doubleSolenoid_two.set(DoubleSolenoid.Value.kOff);
-//          SmartDashboard.putString("Solenoid State", "Off");
+          SmartDashboard.putString("Solenoid State", "Off");
         }
 
       //Climber Elevator
