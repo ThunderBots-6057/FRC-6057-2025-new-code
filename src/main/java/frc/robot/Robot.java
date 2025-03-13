@@ -5,14 +5,17 @@
 package frc.robot;
 
 
-import edu.wpi.first.wpilibj.Joystick;
+//import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
-
 import java.util.function.BooleanSupplier;
 import java.util.function.LongSupplier;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
 
 // See https://docs.revrobotics.com/revlib/install#c++-and-java-installation
 // For how to install revrobotics library
@@ -24,8 +27,8 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 
 public class Robot extends TimedRobot {
   private DifferentialDrive m_robotDrive;
-  private Joystick m_driver;
-  private Joystick m_operator;
+  private XboxController m_driver;
+  private XboxController m_operator;
 
   private final SparkMaxConfig c_leftFrontMotor = new SparkMaxConfig();
   private final SparkMax m_leftFrontMotor = new SparkMax(4, MotorType.kBrushed);
@@ -35,8 +38,8 @@ public class Robot extends TimedRobot {
   private final SparkMax m_leftRearMotor = new SparkMax(51, MotorType.kBrushed);
   private final SparkMaxConfig c_rightRearMotor = new SparkMaxConfig();
   private final SparkMax m_rightRearMotor = new SparkMax(3, MotorType.kBrushed);
-  private final SparkMax m_algeIntakeArm = new SparkMax(7, MotorType.kBrushed);
-  private final SparkMax m_algeIntake = new SparkMax(8, MotorType.kBrushed);
+  private final SparkMax m_algaeIntakeArm = new SparkMax(7, MotorType.kBrushed);
+  private final SparkMax m_algaeIntake = new SparkMax(8, MotorType.kBrushed);
   private final SparkMax m_coralIntake = new SparkMax(13, MotorType.kBrushed);
   private final SparkMax m_coralIntakeAngle = new SparkMax(2, MotorType.kBrushed);
   private final SparkMax m_climb = new SparkMax(15, MotorType.kBrushed);
@@ -47,9 +50,11 @@ public class Robot extends TimedRobot {
 
   // pnuematics to be added
   // Operator r stick up n down
+  private final DoubleSolenoid doubleSolenoid_one = new DoubleSolenoid(0, PneumaticsModuleType.CTREPCM, 0, 1);
+  private final DoubleSolenoid doubleSolenoid_two = new DoubleSolenoid(1, PneumaticsModuleType.CTREPCM, 0, 1);
 
-
-
+// Timers for debounce
+private final Timer t_driveSpeed = new Timer();
 
 
 
@@ -80,8 +85,12 @@ public class Robot extends TimedRobot {
     //Set up drive and control systems
     //Add drive speed toggle
     m_robotDrive = new DifferentialDrive(m_leftFrontMotor::set, m_rightFrontMotor::set);
-    m_driver = new Joystick(0);
-    m_operator = new Joystick(1);
+    m_driver = new XboxController(0);
+    m_operator = new XboxController(1);
+
+    // Timers for debounce reset
+    t_driveSpeed.reset();
+    t_driveSpeed.start();
 
     
   }
@@ -89,34 +98,40 @@ public class Robot extends TimedRobot {
       @Override
     public void teleopPeriodic() {
 
-      if (m_driver.getRawButton(0)){
+      if (m_driver.getRawButton(6) && (t_driveSpeed.get() >= 1)){
         b_driveSpeed = !b_driveSpeed;
+        t_driveSpeed.reset();
      }
 
+     if ((m_driver.getRawAxis(1) > 0.05) || (m_driver.getRawAxis(1) < -0.05) || (m_driver.getRawAxis(5) > 0.05) || (m_driver.getRawAxis(5) < -0.05)){ 
      if(b_driveSpeed){
        m_robotDrive.tankDrive(-m_driver.getRawAxis(1),m_driver.getRawAxis(5));
      }else {
-       m_robotDrive.tankDrive(-m_driver.getRawAxis(1)*0.6,m_driver.getRawAxis(5)*0.6);
+       m_robotDrive.tankDrive(-m_driver.getRawAxis(1)*0.8,m_driver.getRawAxis(5)*0.8);
      }
+     } else{
+      m_robotDrive.tankDrive(0, 0);
+     }
+    
 
       
 
       //Algae Intake Arm
-      if (m_operator.getPOV(1) == 0){
-       m_algeIntakeArm.set(1);
-      } else if (m_operator.getPOV(1) == 180) {
-       m_algeIntakeArm.set(-1);
+      if ((m_operator.getPOV(0) == 225) || (m_operator.getPOV(0) == 180) || (m_operator.getPOV(0) == 135)){
+       m_algaeIntakeArm.set(1);
+      } else if ((m_operator.getPOV(0) == 315) || (m_operator.getPOV(0) == 0) || (m_operator.getPOV(0) == 45)) {
+       m_algaeIntakeArm.set(-1);
       } else {
-       m_algeIntakeArm.set(0);
+       m_algaeIntakeArm.set(0);
       }
 
       //Algae Intake
       if(m_operator.getRawAxis(3) >= 0.5 ){
-        m_algeIntake.set(1);
+        m_algaeIntake.set(1);
       } else if (m_operator.getRawAxis(2) >= 0.5){
-       m_algeIntake.set(-1);
+       m_algaeIntake.set(-1);
       } else {
-       m_algeIntake.set(0);
+       m_algaeIntake.set(0);
       }
 
       //Coral Intake
@@ -130,14 +145,27 @@ public class Robot extends TimedRobot {
       
       //Coral Arm
       if (m_operator.getRawAxis(1) > 0.1){
-       m_algeIntakeArm.set(-1);
+       m_coralIntakeAngle.set(-1);
       } else if(m_operator.getRawAxis(1) < -0.1){
-       m_algeIntakeArm.set(1);
+       m_coralIntakeAngle.set(1);
       } else {
-       m_algeIntakeArm.set(0);
+       m_coralIntakeAngle.set(0);
       }
 
-      //Coral Arm Elevator
+      //Coral Arm Elevator (pnuematics)
+        if (m_operator.getRawAxis(5) >= 0.5) {
+          doubleSolenoid_one.set(DoubleSolenoid.Value.kForward);
+          doubleSolenoid_two.set(DoubleSolenoid.Value.kForward);
+//          SmartDashboard.putString("Solenoid State", "Forward");
+        } else if (m_operator.getRawAxis(5) <= -0.5) {
+          doubleSolenoid_one.set(DoubleSolenoid.Value.kReverse);
+          doubleSolenoid_two.set(DoubleSolenoid.Value.kReverse);
+//          SmartDashboard.putString("Solenoid State", "Reverse");
+        } else {
+          doubleSolenoid_one.set(DoubleSolenoid.Value.kOff);
+          doubleSolenoid_two.set(DoubleSolenoid.Value.kOff);
+//          SmartDashboard.putString("Solenoid State", "Off");
+        }
 
       //Climber Elevator
       if (m_driver.getRawAxis(3) >= 0.5){
