@@ -84,7 +84,7 @@ public class Robot extends TimedRobot {
   // pnuematics to be added
   // Operator r stick up n down
   private final DoubleSolenoid doubleSolenoid_one = new DoubleSolenoid(0, PneumaticsModuleType.CTREPCM, 0, 1);
-  private final DoubleSolenoid doubleSolenoid_two = new DoubleSolenoid(1, PneumaticsModuleType.CTREPCM, 0, 1);
+  private final DoubleSolenoid doubleSolenoid_two = new DoubleSolenoid(0, PneumaticsModuleType.CTREPCM, 2, 3);
 
 // Timers for debounce
 private final Timer t_driveSpeed = new Timer();
@@ -212,24 +212,24 @@ private static final int autonDelay = 5;
 //        m_intake_lift.set(-0.25); //up
 //        }
 
-
-        if (1.5 >= autonTimer.get()) {
-          m_robotDrive.tankDrive(1, 1);
+        // Drive forward 50% for 5 seconds
+        if (5 >= autonTimer.get()) {
+          m_robotDrive.tankDrive(0.5, 0.5);
         } else {
           m_robotDrive.tankDrive(0, 0);
         }
+
+        // Drive forward 50% for 5 seconds
+        if ((5 <= autonTimer.get()) && (10 >= autonTimer.get())) {
+          m_coralIntake.set(-0.1);
+        } else {
+          m_coralIntake.set(0);
+        }
+
         break;
       case kCustomAutoTwo:
         // code block for Auton Two
         ///////////////////////////////////  Start
-      
-        
-
-        if (((1.5 + autonDelay) >= autonTimer.get()) && (autonTimer.get() >= autonDelay)) {
-          m_robotDrive.tankDrive(1, 1);
-        } else {
-          m_robotDrive.tankDrive(0, 0);
-        }
 
         ///////////////////////////////////  End
         break;
