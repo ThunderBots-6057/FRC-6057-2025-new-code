@@ -12,6 +12,8 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
+
+import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.function.LongSupplier;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
@@ -28,6 +30,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 // Imports from last year for camera and shuffleboard/dashboard
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.shuffleboard.SuppliedValueWidget;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.cameraserver.CameraServer;
@@ -149,6 +152,8 @@ private static final int autonDelay = 5;
     System.out.println("Auto selected: " + m_autoSelected);
     SmartDashboard.putData("Auton", m_chooser);
 
+    SmartDashboard.putBoolean("Full Speed", true);
+
 // Camera detect
 // try to connect to camera 1
     try {
@@ -219,7 +224,7 @@ private static final int autonDelay = 5;
           m_robotDrive.tankDrive(0, 0);
         }
 
-        // Drive forward 50% for 5 seconds
+        // Drive from 5 to 10 drop coral at 10%
         if ((5 <= autonTimer.get()) && (10 >= autonTimer.get())) {
           m_coralIntake.set(-0.1);
         } else {
@@ -257,7 +262,8 @@ private static final int autonDelay = 5;
 
       if (m_driver.getRawButton(6) && (t_driveSpeed.get() >= 1)){
         b_driveSpeed = !b_driveSpeed;
-        t_driveSpeed.reset();
+        SmartDashboard.putBoolean("Full Speed", b_driveSpeed);
+         t_driveSpeed.reset();
      }
 
      if ((m_driver.getRawAxis(1) > 0.05) || (m_driver.getRawAxis(1) < -0.05) || (m_driver.getRawAxis(5) > 0.05) || (m_driver.getRawAxis(5) < -0.05)){ 
