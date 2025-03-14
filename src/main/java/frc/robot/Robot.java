@@ -219,7 +219,7 @@ private static final int autonDelay = 5;
 
         // Drive forward 50% for 5 seconds
         if (5 >= autonTimer.get()) {
-          m_robotDrive.tankDrive(0.5, 0.5);
+          m_robotDrive.tankDrive(0.714, 0.714);
         } else {
           m_robotDrive.tankDrive(0, 0);
         }
