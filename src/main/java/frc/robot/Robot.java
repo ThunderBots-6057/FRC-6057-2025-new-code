@@ -219,7 +219,7 @@ private static final int autonDelay = 5;
 
         // Drive forward 50% for 5 seconds
         if (5 >= autonTimer.get()) {
-          m_robotDrive.tankDrive(0.714, 0.714);
+          m_robotDrive.tankDrive(-0.714, 0.714);
         } else {
           m_robotDrive.tankDrive(0, 0);
         }
@@ -235,11 +235,23 @@ private static final int autonDelay = 5;
       case kCustomAutoTwo:
         // code block for Auton Two
         ///////////////////////////////////  Start
+        // Drive forward 50% for 5 seconds
+        if (2 >= autonTimer.get()) {
+          m_robotDrive.tankDrive(0.714, -0.714);
+        } else {
+          m_robotDrive.tankDrive(0, 0);
+        }
+
 
         ///////////////////////////////////  End
         break;
       case kCustomAutoThree:
         // code block for Auton Three
+        if (2 >= autonTimer.get()) {
+          m_robotDrive.tankDrive(0.360, -0.360);
+        } else {
+          m_robotDrive.tankDrive(0, 0);
+        }
         break;
       case kCustomAutoFour:
         // code block for Auton Four
@@ -290,11 +302,14 @@ private static final int autonDelay = 5;
 
       //Algae Intake
       if(m_operator.getRawAxis(3) >= 0.5 ){
+//        m_algaeIntakeArm.set(1);
         m_algaeIntake.set(1);
       } else if (m_operator.getRawAxis(2) >= 0.5){
        m_algaeIntake.set(-1);
+//       m_algaeIntakeArm.set(-1);
       } else {
        m_algaeIntake.set(0);
+//       m_algaeIntakeArm.set(0);
       }
 
       //Coral Intake
