@@ -39,6 +39,7 @@ import edu.wpi.first.cscore.CvSource;
 import edu.wpi.first.cscore.UsbCamera;
 import edu.wpi.first.cscore.VideoMode;
 import edu.wpi.first.cscore.VideoSource.ConnectionStrategy;
+import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.util.PixelFormat;
 import edu.wpi.first.util.sendable.SendableRegistry;
 
@@ -94,11 +95,29 @@ private final Timer t_driveSpeed = new Timer();
 
 private static final boolean camerasConnected = false;
 private static final int autonDelay = 5;
+private static final String m_connListenerHandle = null;
 
 
 
   @Override
   public void robotInit() {
+  //  for(int port = 5800; port <= 5809; port++) {
+  //    PortForwarder.add(port, "http://172.28.0.1", port);
+  //  }
+
+  //  for(int port = 5800; port <= 5809; port++) {
+  //    PortForwarder.add(port, "http://172.28.1.1", port);
+  //  }
+
+  CameraServer server;
+
+  public void robotInit = ("RecordBody"); {
+          server = CameraServer.getInstance();
+      server.setQuality(50);
+      server.startAutomaticCapture("cam0", m_connListenerHandle);
+  }
+
+
 
 
     // we need one side of the divetrain so that positive voltages
@@ -159,7 +178,8 @@ private static final int autonDelay = 5;
     try {
       //  Block of code to try
       if(camerasConnected) {
-        camera1 = CameraServer.startAutomaticCapture(0);
+//        camera1 = CameraServer.addCamera(); 
+        CameraServer.startAutomaticCapture(0);
         camera1.setVideoMode(PixelFormat.kMJPEG,640,480,30);
       }
 
@@ -218,14 +238,14 @@ private static final int autonDelay = 5;
 //        }
 
         // Drive forward 50% for 5 seconds
-        if (5 >= autonTimer.get()) {
+        if (2 >= autonTimer.get()) {
           m_robotDrive.tankDrive(-0.714, 0.714);
         } else {
           m_robotDrive.tankDrive(0, 0);
         }
 
         // Drive from 5 to 10 drop coral at 10%
-        if ((5 <= autonTimer.get()) && (10 >= autonTimer.get())) {
+        if ((2 <= autonTimer.get()) && (3 >= autonTimer.get())) {
           m_coralIntake.set(-0.1);
         } else {
           m_coralIntake.set(0);
@@ -248,7 +268,7 @@ private static final int autonDelay = 5;
       case kCustomAutoThree:
         // code block for Auton Three
         if (2 >= autonTimer.get()) {
-          m_robotDrive.tankDrive(0.360, -0.360);
+          m_robotDrive.tankDrive(0.50, -0.50);
         } else {
           m_robotDrive.tankDrive(0, 0);
         }
@@ -293,9 +313,9 @@ private static final int autonDelay = 5;
 
       //Algae Intake Arm
       if ((m_operator.getPOV(0) == 225) || (m_operator.getPOV(0) == 180) || (m_operator.getPOV(0) == 135)){
-       m_algaeIntakeArm.set(1);
+       m_algaeIntakeArm.set(0.4);
       } else if ((m_operator.getPOV(0) == 315) || (m_operator.getPOV(0) == 0) || (m_operator.getPOV(0) == 45)) {
-       m_algaeIntakeArm.set(-1);
+       m_algaeIntakeArm.set(-0.4);
       } else {
        m_algaeIntakeArm.set(0);
       }
